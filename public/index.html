@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TikDown</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #f5f5f5; color: #111; min-height: 100vh; }
+    @media (prefers-color-scheme: dark) {
+      body { background: #0f0f0f; color: #e2e2e2; }
+      .card { background: #1a1a1a !important; border-color: #2a2a2a !important; }
+      input[type=text] { background: #111 !important; border-color: #2a2a2a !important; color: #e2e2e2 !important; }
+      .chip { background: #222 !important; border-color: #2a2a2a !important; color: #aaa !important; }
+      .step-num { background: #222 !important; border-color: #333 !important; color: #aaa !important; }
+      .steps-title { color: #aaa !important; }
+      .hint { color: #555 !important; }
+      .footer { color: #444 !important; }
+      .error-box { background: #2a1010 !important; border-color: #ff4444 !important; color: #ff8888 !important; }
+      .thumb-wrap { background: #222 !important; }
+    }
+    .wrap { max-width: 560px; margin: 0 auto; padding: 2rem 1rem; }
+    .head { text-align: center; margin-bottom: 2rem; }
+    .logo { display: inline-flex; align-items: center; gap: 10px; margin-bottom: .75rem; }
+    .logo-box { width: 40px; height: 40px; background: #ff2d55; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 20px; }
+    .logo-text { font-size: 1.6rem; font-weight: 600; letter-spacing: -.5px; }
+    .logo-text span { color: #ff2d55; }
+    .subtitle { font-size: 14px; color: #777; line-height: 1.6; }
+    .card { background: #fff; border: 0.5px solid #e0e0e0; border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; }
+    .label { font-size: 12px; color: #888; margin-bottom: .75rem; font-weight: 500; }
+    .input-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    input[type=text] { flex: 1; min-width: 0; padding: 10px 14px; border-radius: 8px; border: 0.5px solid #ddd; background: #fafafa; color: #111; font-size: 14px; font-family: inherit; outline: none; transition: border-color .2s, box-shadow .2s; }
+    input[type=text]:focus { border-color: #ff2d55; box-shadow: 0 0 0 3px rgba(255,45,85,.1); }
+    input::placeholder { color: #bbb; }
+    .btn { padding: 10px 18px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 500; font-family: inherit; transition: .15s; }
+    .btn-check { background: #ff2d55; color: #fff; }
+    .btn-check:hover { background: #e0253c; }
+    .btn-check:disabled { opacity: .5; cursor: not-allowed; }
+    .progress { height: 3px; background: #eee; border-radius: 4px; margin-top: .75rem; overflow: hidden; display: none; }
+    .progress-fill { height: 100%; background: #ff2d55; border-radius: 4px; width: 0; transition: width .4s ease; }
+    .error-box { background: #fff0f0; border: 0.5px solid #ffaaaa; border-radius: 8px; padding: .875rem 1rem; margin-bottom: 1rem; display: none; font-size: 13px; color: #cc0000; gap: 8px; align-items: center; }
+    .result { display: none; }
+    .video-row { display: flex; gap: 14px; align-items: flex-start; }
+    .thumb-wrap { flex-shrink: 0; width: 90px; height: 120px; border-radius: 8px; overflow: hidden; background: #f0f0f0; display: flex; align-items: center; justify-content: center; }
+    .thumb-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .info { flex: 1; min-width: 0; }
+    .video-title { font-size: 14px; font-weight: 500; line-height: 1.5; margin-bottom: .75rem; }
+    .stats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: .875rem; }
+    .chip { font-size: 12px; color: #666; background: #f5f5f5; border: 0.5px solid #e5e5e5; border-radius: 6px; padding: 4px 8px; display: flex; align-items: center; gap: 4px; }
+    .dl-row { display: flex; gap: 8px; }
+    .btn-mp4 { flex: 1; background: #00c2a0; color: #fff; padding: 10px 12px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 6px; transition: .15s; }
+    .btn-mp4:hover { background: #00a889; }
+    .btn-mp4:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-mp3 { flex: 1; background: #7c4dff; color: #fff; padding: 10px 12px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 6px; transition: .15s; }
+    .btn-mp3:hover { background: #6a3de8; }
+    .btn-mp3:disabled { opacity: .5; cursor: not-allowed; }
+    .hint { font-size: 11px; color: #aaa; margin-top: .5rem; }
+    .steps-title { font-size: 13px; font-weight: 500; margin-bottom: 1rem; color: #888; }
+    .step { display: flex; gap: 12px; margin-bottom: .875rem; align-items: flex-start; }
+    .step:last-child { margin-bottom: 0; }
+    .step-num { width: 24px; height: 24px; flex-shrink: 0; border-radius: 50%; background: #f5f5f5; border: 0.5px solid #ddd; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; color: #888; }
+    .step-text p { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+    .step-text span { font-size: 12px; color: #888; }
+    .spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; display: inline-block; vertical-align: middle; margin-left: 6px; }
+    .spinner-dark { border-color: rgba(0,0,0,.15); border-top-color: rgba(0,0,0,.7); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .fade-in { animation: fadeup .3s ease forwards; }
+    @keyframes fadeup { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .footer { text-align: center; font-size: 11px; color: #bbb; margin-top: 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="head">
+      <div class="logo">
+        <div class="logo-box"><i class="ti ti-download"></i></div>
+        <div class="logo-text">Tik<span>Down</span></div>
+      </div>
+      <p class="subtitle">Download video TikTok tanpa watermark — MP4 atau MP3</p>
+    </div>
+
+    <div class="card">
+      <div class="label">Paste URL atau teks share TikTok</div>
+      <div class="input-row">
+        <input type="text" id="urlInput" placeholder="https://tiktok.com/..." autocomplete="off" spellcheck="false" />
+        <button class="btn btn-check" id="fetchBtn" onclick="fetchInfo()">
+          <span id="fetchText">Cek Video</span>
+          <span id="fetchSpinner" class="spinner" style="display:none;"></span>
+        </button>
+      </div>
+      <div class="progress" id="progressBar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+
+    <div class="error-box" id="errorBox">
+      <i class="ti ti-alert-circle"></i>
+      <span id="errorMsg"></span>
+    </div>
+
+    <div class="card result fade-in" id="resultCard">
+      <div class="video-row">
+        <div class="thumb-wrap" id="thumbWrap">
+          <span id="thumbPlaceholder"><i class="ti ti-device-mobile" style="font-size:28px;color:#ccc;"></i></span>
+          <img id="thumbnail" src="" alt="Thumbnail" style="display:none;" />
+        </div>
+        <div class="info">
+          <div class="video-title" id="videoTitle"></div>
+          <div class="stats" id="statsRow"></div>
+          <div class="dl-row">
+            <button class="btn-mp4" id="downloadBtn" onclick="downloadVideo('mp4')">
+              <i class="ti ti-video"></i>
+              <span id="mp4Text">Download MP4</span>
+              <span id="mp4Spinner" class="spinner spinner-dark" style="display:none;margin-left:0;"></span>
+            </button>
+            <button class="btn-mp3" id="downloadMp3Btn" onclick="downloadVideo('mp3')">
+              <i class="ti ti-music"></i>
+              <span id="mp3Text">Download MP3</span>
+              <span id="mp3Spinner" class="spinner" style="display:none;margin-left:0;"></span>
+            </button>
+          </div>
+          <p class="hint">MP4 = video tanpa watermark · MP3 = audio saja</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="steps-title">Cara pakai</div>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text">
+          <p>Buka TikTok & copy link video</p>
+          <span>Tap Share → Copy Link di app TikTok</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text">
+          <p>Paste di kolom di atas</p>
+          <span>URL langsung atau teks share dari app</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text">
+          <p>Pilih format download</p>
+          <span>MP4 untuk video, MP3 untuk audio/musik</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="footer">Untuk keperluan pribadi · Hormati hak cipta konten kreator</p>
+  </div>
+
+  <script>
+    let currentUrl = '';
+
+    function formatNumber(n) {
+      if (!n) return null;
+      if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+      if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+      return n.toString();
+    }
+
+    function formatDuration(s) {
+      if (!s) return null;
+      return Math.floor(s / 60) + ':' + (s % 60).toString().padStart(2, '0');
+    }
+
+    function showError(msg) {
+      const b = document.getElementById('errorBox');
+      document.getElementById('errorMsg').textContent = msg;
+      b.style.display = 'flex';
+    }
+
+    function hideError() {
+      document.getElementById('errorBox').style.display = 'none';
+    }
+
+    async function fetchInfo() {
+      const raw = document.getElementById('urlInput').value.trim();
+      const match = raw.match(/https?:\/\/[^\s]+tiktok\.com\/[^\s]*/);
+      const url = match ? match[0] : raw;
+      document.getElementById('urlInput').value = url;
+      if (!url) return showError('Masukkan URL TikTok terlebih dahulu.');
+      hideError();
+      document.getElementById('resultCard').style.display = 'none';
+      currentUrl = url;
+
+      document.getElementById('fetchBtn').disabled = true;
+      document.getElementById('fetchSpinner').style.display = 'inline-block';
+      document.getElementById('fetchText').textContent = 'Mengambil...';
+
+      const bar = document.getElementById('progressBar');
+      const fill = document.getElementById('progressFill');
+      bar.style.display = 'block';
+      setTimeout(() => { fill.style.width = '70%'; fill.style.transition = 'width .8s ease'; }, 50);
+
+      try {
+        const res = await fetch('/api/info', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        });
+        const data = await res.json();
+        if (!res.ok) return showError(data.error || 'Gagal mengambil info video.');
+
+        fill.style.width = '100%';
+        document.getElementById('videoTitle').textContent = data.title || 'TikTok Video';
+
+        if (data.thumbnail) {
+          const img = document.getElementById('thumbnail');
+          img.src = data.thumbnail;
+          img.style.display = 'block';
+          document.getElementById('thumbPlaceholder').style.display = 'none';
+        }
+
+        const stats = [];
+        if (data.uploader) stats.push({ icon: 'ti-user', val: data.uploader });
+        if (data.duration) stats.push({ icon: 'ti-clock', val: formatDuration(data.duration) });
+        if (data.view_count) stats.push({ icon: 'ti-eye', val: formatNumber(data.view_count) + ' views' });
+        if (data.like_count) stats.push({ icon: 'ti-heart', val: formatNumber(data.like_count) });
+
+        document.getElementById('statsRow').innerHTML = stats
+          .map(s => `<div class="chip"><i class="ti ${s.icon}" style="font-size:12px;"></i>${s.val}</div>`)
+          .join('');
+
+        document.getElementById('resultCard').style.display = 'block';
+      } catch {
+        showError('Tidak bisa terhubung ke server.');
+      } finally {
+        document.getElementById('fetchBtn').disabled = false;
+        document.getElementById('fetchSpinner').style.display = 'none';
+        document.getElementById('fetchText').textContent = 'Cek Video';
+        setTimeout(() => { bar.style.display = 'none'; fill.style.width = '0%'; }, 1200);
+      }
+    }
+
+    async function downloadVideo(format) {
+      if (!currentUrl) return;
+      hideError();
+      const isMp3 = format === 'mp3';
+      const btnId = isMp3 ? 'downloadMp3Btn' : 'downloadBtn';
+      const spinnerId = isMp3 ? 'mp3Spinner' : 'mp4Spinner';
+      const textId = isMp3 ? 'mp3Text' : 'mp4Text';
+      const endpoint = isMp3 ? '/api/download-mp3' : '/api/download';
+      const filename = isMp3 ? 'tiktok_audio.mp3' : 'tiktok_nowatermark.mp4';
+
+      document.getElementById(btnId).disabled = true;
+      document.getElementById(spinnerId).style.display = 'inline-block';
+
+      const msgs = isMp3
+        ? ['Mengekstrak audio...', 'Konversi ke MP3...', 'Hampir selesai...']
+        : ['Menyiapkan video...', 'Mengambil dari TikTok...', 'Hampir selesai...'];
+      let i = 0;
+      document.getElementById(textId).textContent = msgs[0];
+      const interval = setInterval(() => {
+        i = (i + 1) % msgs.length;
+        const el = document.getElementById(textId);
+        if (el) el.textContent = msgs[i];
+      }, 4000);
+
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: currentUrl })
+        });
+        if (!res.ok) {
+          const d = await res.json();
+          return showError(d.error || 'Gagal download.');
+        }
+        const blob = await res.blob();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(a.href);
+      } catch {
+        showError('Gagal mendownload. Coba lagi.');
+      } finally {
+        clearInterval(interval);
+        document.getElementById(btnId).disabled = false;
+        document.getElementById(spinnerId).style.display = 'none';
+        document.getElementById(textId).textContent = isMp3 ? 'Download MP3' : 'Download MP4';
+      }
+    }
+
+    document.getElementById('urlInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') fetchInfo();
+    });
+  </script>
+</body>
+</html>
