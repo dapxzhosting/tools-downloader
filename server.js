@@ -11,7 +11,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-// Pakai os.tmpdir() supaya works di Windows maupun Linux
 const os = require("os");
 const TEMP_DIR = path.join(os.tmpdir(), "tikdown-temp");
 if (!fs.existsSync(TEMP_DIR)) fs.mkdirSync(TEMP_DIR, { recursive: true });
