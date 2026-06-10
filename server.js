@@ -39,10 +39,32 @@ async function fetchUrl(url, options = {}, timeoutMs = 15000) {
 // ─── URL Validators ───────────────────────────────────────────────────────────
 
 function isValidTikTokUrl(url) {
-  return /tiktok\.com\/@[\w.]+\/(video|photo)\/\d+|vm\.tiktok\.com\/\w+|vt\.tiktok\.com\/\w+/.test(url.split("?")[0]);
+  const clean = url.split("?")[0];
+  return (
+    // Standard video/photo post: /@user/video/123 atau /@user/photo/123
+    /tiktok\.com\/@[\w.]+\/(video|photo)\/\d+/.test(clean) ||
+    // Short links: vm.tiktok.com/xxx, vt.tiktok.com/xxx, tiktok.com/t/xxx
+    /vm\.tiktok\.com\/\w+/.test(clean) ||
+    /vt\.tiktok\.com\/\w+/.test(clean) ||
+    /tiktok\.com\/t\/\w+/.test(clean) ||
+    // Stories: /@user/photo (tanpa ID) atau /@user di akhir (akan di-resolve yt-dlp)
+    /tiktok\.com\/@[\w.]+\/photo\/?$/.test(clean) ||
+    // Fallback: apapun dari domain tiktok.com yang punya path bermakna
+    /tiktok\.com\/@[\w.]+/.test(clean)
+  );
 }
 function isValidInstagramUrl(url) {
-  return /instagram\.com\/(p|reel|tv|reels)\/[\w-]+/.test(url.split("?")[0]);
+  const clean = url.split("?")[0];
+  return (
+    // Post, reel, tv
+    /instagram\.com\/(p|reel|tv|reels)\/[\w-]+/.test(clean) ||
+    // Stories: /stories/username/mediaId/
+    /instagram\.com\/stories\/[\w.]+\/\d+/.test(clean) ||
+    // Stories tanpa media ID (link share langsung)
+    /instagram\.com\/stories\/[\w.]+\/?$/.test(clean) ||
+    // Share links
+    /instagram\.com\/share\/[\w-]+/.test(clean)
+  );
 }
 function isValidCapCutUrl(url) {
   return /capcut\.com\/(v|video|t)\/[\w-]+|capcut\.com\/share\//.test(url.split("?")[0]);
@@ -57,7 +79,7 @@ function platformLabel(p) {
   return { tiktok: "TikTok", instagram: "Instagram", capcut: "CapCut" }[p] || p;
 }
 function isTikTokShortUrl(url) {
-  return /vm\.tiktok\.com|vt\.tiktok\.com/.test(url);
+  return /vm\.tiktok\.com|vt\.tiktok\.com|tiktok\.com\/t\//.test(url);
 }
 
 // ─── Resolve short TikTok URL ─────────────────────────────────────────────────
@@ -154,7 +176,7 @@ app.post("/api/info", async (req, res) => {
   if (!url) return res.status(400).json({ error: "URL wajib diisi" });
 
   const platform = detectPlatform(url);
-  if (!platform) return res.status(400).json({ error: "URL tidak valid. Gunakan link TikTok, Instagram Reel/Post, atau CapCut." });
+  if (!platform) return res.status(400).json({ error: "URL tidak valid. Gunakan link TikTok, Instagram Reel/Post." });
 
   // ── TikTok: pakai tikwm (handle vm/vt + auto detect foto vs video) ──
   if (platform === "tiktok") {
@@ -232,7 +254,12 @@ app.post("/api/info", async (req, res) => {
       });
     } catch (e) {
       console.error(`[info/${platform}] cobalt error:`, e.message);
-      return res.status(500).json({ error: `Gagal mengambil info dari ${platformLabel(platform)}. Pastikan URL publik dan valid.` });
+      const isStories = /stories/.test(url);
+      return res.status(500).json({
+        error: isStories
+          ? `Gagal mengambil info Stories ${platformLabel(platform)}. Stories harus dibuka dulu agar URL-nya valid, atau coba copy link langsung dari browser.`
+          : `Gagal mengambil info dari ${platformLabel(platform)}. Pastikan URL publik dan valid.`
+      });
     }
   }
 
