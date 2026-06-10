@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VidDown – TikTok, Instagram & CapCut Downloader</title>
+  <title>VidDown – TikTok & Instagram Downloader</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
   <style>
@@ -12,6 +12,8 @@
     @media (prefers-color-scheme: dark) {
       body { background: #0f0f0f; color: #e2e2e2; }
       .card { background: #1a1a1a !important; border-color: #2a2a2a !important; }
+      .clear-btn { color: #444 !important; }
+      .clear-btn:hover { color: #aaa !important; }
       input[type=text] { background: #111 !important; border-color: #2a2a2a !important; color: #e2e2e2 !important; }
       .chip { background: #222 !important; border-color: #2a2a2a !important; color: #aaa !important; }
       .step-num { background: #222 !important; border-color: #333 !important; color: #aaa !important; }
@@ -42,7 +44,10 @@
     .tab-icon { font-size: 15px; }
     /* Input */
     .input-row { display: flex; gap: 8px; flex-wrap: wrap; }
-    input[type=text] { flex: 1; min-width: 0; padding: 10px 14px; border-radius: 8px; border: 0.5px solid #ddd; background: #fafafa; color: #111; font-size: 14px; font-family: inherit; outline: none; transition: border-color .2s, box-shadow .2s; }
+    .input-wrap { flex: 1; min-width: 0; position: relative; display: flex; align-items: center; }
+    .clear-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #bbb; font-size: 16px; padding: 2px; line-height: 1; display: none; transition: color .15s; }
+    .clear-btn:hover { color: #888; }
+    input[type=text] { width: 100%; padding: 10px 32px 10px 14px; border-radius: 8px; border: 0.5px solid #ddd; background: #fafafa; color: #111; font-size: 14px; font-family: inherit; outline: none; transition: border-color .2s, box-shadow .2s; }
     input[type=text]:focus { border-color: var(--accent, #ff2d55); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, #ff2d55) 15%, transparent); }
     input::placeholder { color: #bbb; }
     .btn { padding: 10px 18px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 500; font-family: inherit; transition: .15s; }
@@ -79,7 +84,23 @@
     .img-progress-label { font-size: 12px; color: #888; margin-bottom: 6px; }
     .img-progress-bg { height: 4px; background: #eee; border-radius: 4px; overflow: hidden; }
     .img-progress-fill { height: 100%; background: #f59e0b; border-radius: 4px; width: 0; transition: width .3s ease; }
-    .hint { font-size: 11px; color: #aaa; margin-top: .5rem; }
+    /* Photo grid preview */
+    .photo-grid-wrap { margin-top: 12px; display: none; }
+    .photo-grid-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .photo-grid-label { font-size: 12px; color: #888; font-weight: 500; }
+    .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .photo-item { position: relative; border-radius: 8px; overflow: hidden; aspect-ratio: 1; background: #f0f0f0; }
+    .photo-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .photo-item-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,.55) 100%); opacity: 0; transition: opacity .2s; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px; }
+    .photo-item:hover .photo-item-overlay { opacity: 1; }
+    .photo-item-num { position: absolute; top: 6px; left: 7px; font-size: 10px; font-weight: 600; color: #fff; background: rgba(0,0,0,.45); border-radius: 4px; padding: 1px 5px; pointer-events: none; }
+    .btn-dl-single { background: rgba(255,255,255,.92); color: #111; border: none; border-radius: 6px; padding: 5px 10px; font-size: 11px; font-weight: 600; font-family: inherit; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: .15s; white-space: nowrap; }
+    .btn-dl-single:hover { background: #fff; }
+    .btn-dl-single:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-dl-single .mini-spinner { width: 10px; height: 10px; border: 1.5px solid rgba(0,0,0,.2); border-top-color: #333; border-radius: 50%; animation: spin .7s linear infinite; display: none; }
+    @media (prefers-color-scheme: dark) {
+      .photo-item { background: #222 !important; }
+    }
     /* Steps */
     .steps-title { font-size: 13px; font-weight: 500; margin-bottom: 1rem; color: #888; }
     .step { display: flex; gap: 12px; margin-bottom: .875rem; align-items: flex-start; }
@@ -103,7 +124,7 @@
         </div>
         <div class="logo-text">Vid<span style="color:#ff2d55;">Down</span></div>
       </div>
-      <p class="subtitle">Download video & foto TikTok, Instagram & CapCut<br>tanpa watermark — MP4, MP3, atau Foto</p>
+      <p class="subtitle">Download video & foto TikTok dan Instagram<br>tanpa watermark — MP4, MP3, atau Foto</p>
     </div>
 
     <!-- Tabs -->
@@ -114,16 +135,16 @@
       <button class="tab-btn" data-platform="instagram" onclick="switchTab('instagram')">
         <i class="tab-icon ti ti-brand-instagram"></i> Instagram
       </button>
-      <button class="tab-btn" data-platform="capcut" onclick="switchTab('capcut')">
-        <i class="tab-icon ti ti-cut"></i> CapCut
-      </button>
     </div>
 
     <!-- Input -->
     <div class="card" id="inputCard" style="--accent:#ff2d55;">
       <div class="label" id="inputLabel">Paste URL atau teks share TikTok</div>
       <div class="input-row">
-        <input type="text" id="urlInput" placeholder="https://tiktok.com/..." autocomplete="off" spellcheck="false" />
+        <div class="input-wrap">
+          <input type="text" id="urlInput" placeholder="https://tiktok.com/..." autocomplete="off" spellcheck="false" />
+          <button class="clear-btn" id="clearBtn" onclick="clearInput()" title="Hapus teks">&#x2715;</button>
+        </div>
         <button class="btn btn-check" id="fetchBtn" onclick="fetchInfo()">
           <span id="fetchText">Cek</span>
           <span id="fetchSpinner" class="spinner" style="display:none;"></span>
@@ -172,7 +193,7 @@
           <div id="photoBtns" style="display:none;">
             <button class="btn-photo" id="downloadPhotoBtn" onclick="downloadImages()">
               <i class="ti ti-photo"></i>
-              <span id="photoText">Download Foto</span>
+              <span id="photoText">Download Semua Foto</span>
               <span id="photoSpinner" class="spinner" style="display:none;margin-left:0;"></span>
             </button>
             <div class="img-progress-wrap" id="imgProgressWrap">
@@ -181,10 +202,18 @@
                 <div class="img-progress-fill" id="imgProgressFill"></div>
               </div>
             </div>
-            <p class="hint" id="photoHint">Semua foto akan didownload satu per satu</p>
+            <p class="hint" id="photoHint">Pilih foto di bawah atau download semua sekaligus</p>
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Photo Grid Preview (for carousel/image posts) -->
+    <div class="card fade-in photo-grid-wrap" id="photoGridCard">
+      <div class="photo-grid-header">
+        <span class="photo-grid-label" id="photoGridLabel">Preview Foto</span>
+      </div>
+      <div class="photo-grid" id="photoGrid"></div>
     </div>
 
     <!-- How to use -->
@@ -194,7 +223,7 @@
         <div class="step-num">1</div>
         <div class="step-text">
           <p>Pilih platform di atas</p>
-          <span>TikTok, Instagram Reel/Post, atau CapCut</span>
+          <span>TikTok atau Instagram Reel/Post</span>
         </div>
       </div>
       <div class="step">
@@ -221,11 +250,11 @@
     let activePlatform = 'tiktok';
     let currentContentType = 'video'; // 'video' | 'image' | 'carousel'
     let currentImageCount = 0;
+    let fetchedImages = []; // stores { data, mime, filename, thumbnail_url } for grid preview
 
     const platformConfig = {
       tiktok:    { accent: '#ff2d55', label: 'Paste URL atau teks share TikTok',    placeholder: 'https://tiktok.com/@user/video/...', icon: 'ti-brand-tiktok',    name: 'TikTok' },
       instagram: { accent: '#e1306c', label: 'Paste URL Instagram Reel atau Post',  placeholder: 'https://instagram.com/reel/...',      icon: 'ti-brand-instagram', name: 'Instagram' },
-      capcut:    { accent: '#333',    label: 'Paste URL video CapCut',              placeholder: 'https://capcut.com/v/...',             icon: 'ti-cut',             name: 'CapCut' },
     };
 
     function switchTab(platform) {
@@ -247,9 +276,12 @@
       document.getElementById('progressFill').style.background = cfg.accent;
 
       document.getElementById('urlInput').value = '';
+      document.getElementById('clearBtn').style.display = 'none';
       document.getElementById('resultCard').style.display = 'none';
+      document.getElementById('photoGridCard').style.display = 'none';
       hideError();
       currentUrl = '';
+      fetchedImages = [];
     }
 
     function formatNumber(n) {
@@ -279,6 +311,8 @@
       if (!raw) return showError('Masukkan URL terlebih dahulu.');
       hideError();
       document.getElementById('resultCard').style.display = 'none';
+      document.getElementById('photoGridCard').style.display = 'none';
+      fetchedImages = [];
       currentUrl = raw;
 
       document.getElementById('fetchBtn').disabled = true;
@@ -339,11 +373,10 @@
 
         if (isPhoto) {
           const count = currentImageCount > 1 ? `${currentImageCount} foto` : 'foto';
-          document.getElementById('photoText').textContent = `Download ${count}`;
-          document.getElementById('photoHint').textContent =
-            currentImageCount > 1
-              ? `${currentImageCount} foto akan didownload satu per satu`
-              : 'Foto akan didownload otomatis';
+          document.getElementById('photoText').textContent = `Download Semua (${count})`;
+          document.getElementById('photoHint').textContent = 'Pilih foto di bawah atau download semua sekaligus';
+          // Fetch images in background and render grid
+          fetchAndRenderGrid(raw);
         }
 
         document.getElementById('resultCard').style.display = 'block';
@@ -409,35 +442,39 @@
 
       document.getElementById('downloadPhotoBtn').disabled = true;
       document.getElementById('photoSpinner').style.display = 'inline-block';
-      document.getElementById('photoText').textContent = 'Mengambil gambar...';
+      document.getElementById('photoText').textContent = 'Mengunduh...';
 
       const progressWrap = document.getElementById('imgProgressWrap');
       const progressFill = document.getElementById('imgProgressFill');
       const progressLabel = document.getElementById('imgProgressLabel');
 
       try {
-        const res = await fetch('/api/download-images', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: currentUrl }),
-        });
+        let images = fetchedImages;
 
-        // Check if response is a file (mp4 fallback for slideshows)
-        const contentType = res.headers.get('content-type') || '';
-        if (contentType.includes('video/mp4') || contentType.includes('application/octet-stream')) {
-          if (!res.ok) { showError('Gagal download.'); return; }
-          const blob = await res.blob();
-          triggerDownload(blob, `${activePlatform}_slideshow.mp4`);
-          return;
+        // If grid hasn't loaded yet, fetch now
+        if (!images || images.length === 0) {
+          const res = await fetch('/api/download-images', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: currentUrl }),
+          });
+
+          const contentType = res.headers.get('content-type') || '';
+          if (contentType.includes('video/mp4') || contentType.includes('application/octet-stream')) {
+            if (!res.ok) { showError('Gagal download.'); return; }
+            const blob = await res.blob();
+            triggerDownload(blob, `${activePlatform}_slideshow.mp4`);
+            return;
+          }
+
+          const data = await res.json();
+          if (!res.ok) { showError(data.error || 'Gagal download gambar.'); return; }
+          images = data.images || [];
+          fetchedImages = images;
         }
 
-        const data = await res.json();
-        if (!res.ok) { showError(data.error || 'Gagal download gambar.'); return; }
-
-        const { images } = data;
         if (!images || images.length === 0) { showError('Tidak ada gambar ditemukan.'); return; }
 
-        // Download images one by one with small delay so browser doesn't block
         progressWrap.style.display = 'block';
         for (let idx = 0; idx < images.length; idx++) {
           const img = images[idx];
@@ -448,7 +485,6 @@
           const blob = new Blob([byteArr], { type: img.mime });
           triggerDownload(blob, img.filename);
 
-          // Small delay between downloads
           if (idx < images.length - 1) await sleep(600);
         }
 
@@ -461,11 +497,101 @@
         document.getElementById('downloadPhotoBtn').disabled = false;
         document.getElementById('photoSpinner').style.display = 'none';
         const count = currentImageCount > 1 ? `${currentImageCount} foto` : 'foto';
-        document.getElementById('photoText').textContent = `Download ${count}`;
+        document.getElementById('photoText').textContent = `Download Semua (${count})`;
       }
     }
 
-    function triggerDownload(blob, filename) {
+    async function fetchAndRenderGrid(url) {
+      const gridCard = document.getElementById('photoGridCard');
+      const grid = document.getElementById('photoGrid');
+      const label = document.getElementById('photoGridLabel');
+
+      // Show skeleton placeholders while loading
+      const skeletonCount = currentImageCount || 3;
+      grid.innerHTML = Array.from({ length: skeletonCount }, (_, i) => `
+        <div class="photo-item" style="background: linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite;">
+        </div>`).join('');
+      gridCard.style.display = 'block';
+
+      // Add shimmer keyframe if not present
+      if (!document.getElementById('shimmer-style')) {
+        const s = document.createElement('style');
+        s.id = 'shimmer-style';
+        s.textContent = '@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }';
+        document.head.appendChild(s);
+      }
+
+      try {
+        const res = await fetch('/api/download-images', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url }),
+        });
+
+        const contentType = res.headers.get('content-type') || '';
+        // If server returns a video (slideshow fallback), hide grid
+        if (contentType.includes('video/mp4') || contentType.includes('application/octet-stream')) {
+          gridCard.style.display = 'none';
+          return;
+        }
+
+        const data = await res.json();
+        if (!res.ok || !data.images || data.images.length === 0) {
+          gridCard.style.display = 'none';
+          return;
+        }
+
+        fetchedImages = data.images;
+        label.textContent = `Preview Foto (${fetchedImages.length})`;
+        grid.innerHTML = '';
+
+        fetchedImages.forEach((img, idx) => {
+          const byteArr = base64ToUint8Array(img.data);
+          const blob = new Blob([byteArr], { type: img.mime });
+          const objectUrl = URL.createObjectURL(blob);
+
+          const item = document.createElement('div');
+          item.className = 'photo-item';
+          item.innerHTML = `
+            <img src="${objectUrl}" alt="Foto ${idx + 1}" loading="lazy" />
+            <div class="photo-item-num">${idx + 1}</div>
+            <div class="photo-item-overlay">
+              <button class="btn-dl-single" id="dlBtn-${idx}" onclick="downloadSingleImage(${idx})">
+                <i class="ti ti-download" style="font-size:11px;"></i>
+                Simpan
+                <span class="mini-spinner" id="miniSpinner-${idx}"></span>
+              </button>
+            </div>`;
+          grid.appendChild(item);
+        });
+
+        // Update "download all" button count
+        const count = fetchedImages.length > 1 ? `${fetchedImages.length} foto` : 'foto';
+        document.getElementById('photoText').textContent = `Download Semua (${count})`;
+
+      } catch {
+        gridCard.style.display = 'none';
+      }
+    }
+
+    async function downloadSingleImage(idx) {
+      const img = fetchedImages[idx];
+      if (!img) return;
+      const btn = document.getElementById(`dlBtn-${idx}`);
+      const spinner = document.getElementById(`miniSpinner-${idx}`);
+      if (btn) btn.disabled = true;
+      if (spinner) spinner.style.display = 'inline-block';
+      try {
+        const byteArr = base64ToUint8Array(img.data);
+        const blob = new Blob([byteArr], { type: img.mime });
+        triggerDownload(blob, img.filename);
+      } finally {
+        if (btn) btn.disabled = false;
+        if (spinner) spinner.style.display = 'none';
+      }
+    }
+
+    
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = filename;
@@ -485,6 +611,22 @@
     function sleep(ms) {
       return new Promise(resolve => setTimeout(resolve, ms));
     }
+
+    function clearInput() {
+      const input = document.getElementById('urlInput');
+      input.value = '';
+      document.getElementById('clearBtn').style.display = 'none';
+      document.getElementById('resultCard').style.display = 'none';
+      document.getElementById('photoGridCard').style.display = 'none';
+      hideError();
+      currentUrl = '';
+      fetchedImages = [];
+      input.focus();
+    }
+
+    document.getElementById('urlInput').addEventListener('input', function() {
+      document.getElementById('clearBtn').style.display = this.value ? 'block' : 'none';
+    });
 
     document.getElementById('urlInput').addEventListener('keydown', e => {
       if (e.key === 'Enter') fetchInfo();
