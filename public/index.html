@@ -85,6 +85,20 @@
     .img-progress-bg { height: 4px; background: #eee; border-radius: 4px; overflow: hidden; }
     .img-progress-fill { height: 100%; background: #f59e0b; border-radius: 4px; width: 0; transition: width .3s ease; }
     .hint { font-size: 11px; color: #aaa; margin-top: .5rem; }
+    /* Photo grid */
+    .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
+    .photo-grid-item { position: relative; border-radius: 8px; overflow: hidden; aspect-ratio: 1; background: #f0f0f0; cursor: pointer; }
+    .photo-grid-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .photo-grid-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0); transition: background .2s; display: flex; align-items: center; justify-content: center; }
+    .photo-grid-item:hover .photo-grid-overlay { background: rgba(0,0,0,.45); }
+    .photo-grid-dl-btn { opacity: 0; transition: opacity .2s; background: rgba(255,255,255,.95); border: none; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #333; font-size: 16px; }
+    .photo-grid-item:hover .photo-grid-dl-btn { opacity: 1; }
+    .photo-grid-num { position: absolute; top: 5px; left: 7px; font-size: 11px; font-weight: 600; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+    .photo-grid-loading { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px 0; font-size: 13px; color: #888; }
+    @media (prefers-color-scheme: dark) {
+      .photo-grid-item { background: #222 !important; }
+      .photo-grid-dl-btn { background: rgba(255,255,255,.9) !important; }
+    }
     /* Steps */
     .steps-title { font-size: 13px; font-weight: 500; margin-bottom: 1rem; color: #888; }
     .step { display: flex; gap: 12px; margin-bottom: .875rem; align-items: flex-start; }
@@ -175,9 +189,9 @@
 
           <!-- Photo button (shown for photo/carousel posts) -->
           <div id="photoBtns" style="display:none;">
-            <button class="btn-photo" id="downloadPhotoBtn" onclick="downloadImages()">
-              <i class="ti ti-photo"></i>
-              <span id="photoText">Download Foto</span>
+            <button class="btn-photo" id="downloadPhotoBtn" onclick="downloadAllImages()">
+              <i class="ti ti-photo-down"></i>
+              <span id="photoText">Download Semua Foto</span>
               <span id="photoSpinner" class="spinner" style="display:none;margin-left:0;"></span>
             </button>
             <div class="img-progress-wrap" id="imgProgressWrap">
@@ -186,9 +200,19 @@
                 <div class="img-progress-fill" id="imgProgressFill"></div>
               </div>
             </div>
-            <p class="hint" id="photoHint">Semua foto akan didownload satu per satu</p>
           </div>
         </div>
+      </div>
+      <!-- Photo grid (shown below for multi-photo posts) -->
+      <div id="photoGridSection" style="display:none;margin-top:12px;">
+        <div class="label" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">
+          <span id="photoGridLabel">Preview Foto</span>
+        </div>
+        <div id="photoGridLoading" class="photo-grid-loading" style="display:none;">
+          <span class="spinner" style="border-color:rgba(0,0,0,.15);border-top-color:#f59e0b;width:16px;height:16px;"></span>
+          <span>Memuat preview foto...</span>
+        </div>
+        <div id="photoGrid" class="photo-grid"></div>
       </div>
     </div>
 
@@ -226,6 +250,7 @@
     let activePlatform = 'tiktok';
     let currentContentType = 'video'; // 'video' | 'image' | 'carousel'
     let currentImageCount = 0;
+    let cachedImages = null; // prefetched image data array
 
     const platformConfig = {
       tiktok:    { accent: '#ff2d55', label: 'Paste URL atau teks share TikTok',    placeholder: 'https://tiktok.com/@user/video/...', icon: 'ti-brand-tiktok',    name: 'TikTok' },
@@ -255,6 +280,7 @@
       document.getElementById('resultCard').style.display = 'none';
       hideError();
       currentUrl = '';
+      cachedImages = null;
     }
 
     function formatNumber(n) {
@@ -344,11 +370,20 @@
 
         if (isPhoto) {
           const count = currentImageCount > 1 ? `${currentImageCount} foto` : 'foto';
-          document.getElementById('photoText').textContent = `Download ${count}`;
-          document.getElementById('photoHint').textContent =
-            currentImageCount > 1
-              ? `${currentImageCount} foto akan didownload satu per satu`
-              : 'Foto akan didownload otomatis';
+          document.getElementById('photoText').textContent = `Download Semua${currentImageCount > 1 ? ' (' + currentImageCount + ')' : ''}`;
+
+          // Show grid section and start prefetch
+          document.getElementById('photoGridSection').style.display = 'block';
+          document.getElementById('photoGrid').innerHTML = '';
+          cachedImages = null;
+          if (currentImageCount > 1) {
+            document.getElementById('photoGridLabel').textContent = `Preview ${currentImageCount} Foto`;
+            prefetchImages();
+          } else {
+            document.getElementById('photoGridSection').style.display = 'none';
+          }
+        } else {
+          document.getElementById('photoGridSection').style.display = 'none';
         }
 
         document.getElementById('resultCard').style.display = 'block';
@@ -408,17 +443,12 @@
       }
     }
 
-    async function downloadImages() {
+    async function prefetchImages() {
       if (!currentUrl) return;
-      hideError();
-
-      document.getElementById('downloadPhotoBtn').disabled = true;
-      document.getElementById('photoSpinner').style.display = 'inline-block';
-      document.getElementById('photoText').textContent = 'Mengambil gambar...';
-
-      const progressWrap = document.getElementById('imgProgressWrap');
-      const progressFill = document.getElementById('imgProgressFill');
-      const progressLabel = document.getElementById('imgProgressLabel');
+      const loading = document.getElementById('photoGridLoading');
+      const grid = document.getElementById('photoGrid');
+      loading.style.display = 'flex';
+      grid.innerHTML = '';
 
       try {
         const res = await fetch('/api/download-images', {
@@ -427,33 +457,104 @@
           body: JSON.stringify({ url: currentUrl }),
         });
 
-        // Check if response is a file (mp4 fallback for slideshows)
         const contentType = res.headers.get('content-type') || '';
         if (contentType.includes('video/mp4') || contentType.includes('application/octet-stream')) {
-          if (!res.ok) { showError('Gagal download.'); return; }
-          const blob = await res.blob();
-          triggerDownload(blob, `${activePlatform}_slideshow.mp4`);
+          loading.style.display = 'none';
+          document.getElementById('photoGridSection').style.display = 'none';
           return;
         }
 
         const data = await res.json();
-        if (!res.ok) { showError(data.error || 'Gagal download gambar.'); return; }
+        if (!res.ok || !data.images || data.images.length === 0) {
+          loading.style.display = 'none';
+          return;
+        }
 
-        const { images } = data;
-        if (!images || images.length === 0) { showError('Tidak ada gambar ditemukan.'); return; }
+        cachedImages = data.images;
+        loading.style.display = 'none';
+        renderPhotoGrid(cachedImages);
+      } catch {
+        document.getElementById('photoGridLoading').style.display = 'none';
+      }
+    }
 
-        // Download images one by one with small delay so browser doesn't block
+    function renderPhotoGrid(images) {
+      const grid = document.getElementById('photoGrid');
+      grid.innerHTML = '';
+      images.forEach((img, idx) => {
+        const src = `data:${img.mime};base64,${img.data}`;
+        const item = document.createElement('div');
+        item.className = 'photo-grid-item';
+        item.innerHTML = `
+          <img src="${src}" alt="Foto ${idx + 1}" loading="lazy" />
+          <div class="photo-grid-overlay">
+            <button class="photo-grid-dl-btn" title="Download foto ${idx + 1}" onclick="downloadSingleImage(${idx})">
+              <i class="ti ti-download"></i>
+            </button>
+          </div>
+          <span class="photo-grid-num">${idx + 1}</span>
+        `;
+        grid.appendChild(item);
+      });
+    }
+
+    async function downloadSingleImage(idx) {
+      if (cachedImages && cachedImages[idx]) {
+        const img = cachedImages[idx];
+        const byteArr = base64ToUint8Array(img.data);
+        const blob = new Blob([byteArr], { type: img.mime });
+        triggerDownload(blob, img.filename);
+        return;
+      }
+      showError('Data foto belum siap, coba lagi sebentar.');
+    }
+
+    async function downloadAllImages() {
+      if (!currentUrl) return;
+      hideError();
+
+      document.getElementById('downloadPhotoBtn').disabled = true;
+      document.getElementById('photoSpinner').style.display = 'inline-block';
+      document.getElementById('photoText').textContent = 'Menyiapkan...';
+
+      const progressWrap = document.getElementById('imgProgressWrap');
+      const progressFill = document.getElementById('imgProgressFill');
+      const progressLabel = document.getElementById('imgProgressLabel');
+
+      try {
+        let images = cachedImages;
+        if (!images) {
+          document.getElementById('photoText').textContent = 'Mengambil gambar...';
+          const res = await fetch('/api/download-images', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: currentUrl }),
+          });
+
+          const contentType = res.headers.get('content-type') || '';
+          if (contentType.includes('video/mp4') || contentType.includes('application/octet-stream')) {
+            if (!res.ok) { showError('Gagal download.'); return; }
+            const blob = await res.blob();
+            triggerDownload(blob, `${activePlatform}_slideshow.mp4`);
+            return;
+          }
+
+          const data = await res.json();
+          if (!res.ok) { showError(data.error || 'Gagal download gambar.'); return; }
+          images = data.images;
+          cachedImages = images;
+          if (!images || images.length === 0) { showError('Tidak ada gambar ditemukan.'); return; }
+          if (images.length > 1) renderPhotoGrid(images);
+        }
+
         progressWrap.style.display = 'block';
         for (let idx = 0; idx < images.length; idx++) {
           const img = images[idx];
           progressLabel.textContent = `Mengunduh foto ${idx + 1}/${images.length}...`;
           progressFill.style.width = `${((idx + 1) / images.length) * 100}%`;
-
           const byteArr = base64ToUint8Array(img.data);
           const blob = new Blob([byteArr], { type: img.mime });
           triggerDownload(blob, img.filename);
-
-          // Small delay between downloads
           if (idx < images.length - 1) await sleep(600);
         }
 
@@ -465,8 +566,8 @@
       } finally {
         document.getElementById('downloadPhotoBtn').disabled = false;
         document.getElementById('photoSpinner').style.display = 'none';
-        const count = currentImageCount > 1 ? `${currentImageCount} foto` : 'foto';
-        document.getElementById('photoText').textContent = `Download ${count}`;
+        const count = currentImageCount > 1 ? `Download Semua (${currentImageCount})` : 'Download Foto';
+        document.getElementById('photoText').textContent = count;
       }
     }
 
