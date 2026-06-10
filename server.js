@@ -4,6 +4,7 @@ const { exec } = require("child_process");
 const path = require("path");
 const fs = require("fs");
 const os = require("os");
+require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
