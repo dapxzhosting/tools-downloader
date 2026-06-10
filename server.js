@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const { exec } = require("child_process");
@@ -102,7 +103,7 @@ async function tikwmFetch(url) {
 // ─── Cobalt API (Instagram & CapCut) ─────────────────────────────────────────
 
 async function cobaltFetch(url) {
-  const apiUrl = process.env.COBALT_API_URL || "https://api.cobalt.tools";
+  const apiUrl = process.env.COBALT_API_URL || process.env.API_URL || "https://api.cobalt.tools";
   console.log(`[cobalt] → ${url} (via ${apiUrl})`);
 
   const headers = {
