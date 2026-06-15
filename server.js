@@ -205,11 +205,6 @@ app.post("/api/info", async (req, res) => {
       });
     }
   }
-
-<<<<<<< HEAD
-=======
-  // ── Instagram & CapCut: pakai Cobalt + yt-dlp untuk metadata ──
->>>>>>> 0dc5d37172bbf9a7d4d0eb139cb77b1db2b4c696
   if (platform === "instagram" || platform === "capcut") {
     // Ambil metadata via yt-dlp (uploader, views, likes, duration, thumbnail, title)
     async function fetchYtDlpMeta(targetUrl) {
