@@ -5,7 +5,6 @@ const { exec } = require("child_process");
 const path = require("path");
 const fs = require("fs");
 const os = require("os");
-require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,8 +15,6 @@ app.use(express.static(path.join(__dirname, "public")));
 
 const TEMP_DIR = path.join(os.tmpdir(), "videodown-temp");
 if (!fs.existsSync(TEMP_DIR)) fs.mkdirSync(TEMP_DIR, { recursive: true });
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function checkYtDlp() {
   return new Promise((resolve) => {
@@ -36,33 +33,23 @@ async function fetchUrl(url, options = {}, timeoutMs = 15000) {
   }
 }
 
-// ─── URL Validators ───────────────────────────────────────────────────────────
-
 function isValidTikTokUrl(url) {
   const clean = url.split("?")[0];
   return (
-    // Standard video/photo post: /@user/video/123 atau /@user/photo/123
     /tiktok\.com\/@[\w.]+\/(video|photo)\/\d+/.test(clean) ||
-    // Short links: vm.tiktok.com/xxx, vt.tiktok.com/xxx, tiktok.com/t/xxx
     /vm\.tiktok\.com\/\w+/.test(clean) ||
     /vt\.tiktok\.com\/\w+/.test(clean) ||
     /tiktok\.com\/t\/\w+/.test(clean) ||
-    // Stories: /@user/photo (tanpa ID) atau /@user di akhir (akan di-resolve yt-dlp)
     /tiktok\.com\/@[\w.]+\/photo\/?$/.test(clean) ||
-    // Fallback: apapun dari domain tiktok.com yang punya path bermakna
     /tiktok\.com\/@[\w.]+/.test(clean)
   );
 }
 function isValidInstagramUrl(url) {
   const clean = url.split("?")[0];
   return (
-    // Post, reel, tv
     /instagram\.com\/(p|reel|tv|reels)\/[\w-]+/.test(clean) ||
-    // Stories: /stories/username/mediaId/
     /instagram\.com\/stories\/[\w.]+\/\d+/.test(clean) ||
-    // Stories tanpa media ID (link share langsung)
     /instagram\.com\/stories\/[\w.]+\/?$/.test(clean) ||
-    // Share links
     /instagram\.com\/share\/[\w-]+/.test(clean)
   );
 }
@@ -81,8 +68,6 @@ function platformLabel(p) {
 function isTikTokShortUrl(url) {
   return /vm\.tiktok\.com|vt\.tiktok\.com|tiktok\.com\/t\//.test(url);
 }
-
-// ─── Resolve short TikTok URL ─────────────────────────────────────────────────
 
 async function resolveShortUrl(url) {
   if (!isTikTokShortUrl(url)) return url;
@@ -105,8 +90,6 @@ async function resolveShortUrl(url) {
   }
 }
 
-// ─── TikWM API (TikTok foto & video) ─────────────────────────────────────────
-
 async function tikwmFetch(url) {
   const clean = url.split("?")[0];
   const apiUrl = `https://www.tikwm.com/api/?url=${encodeURIComponent(clean)}&hd=1`;
@@ -121,8 +104,6 @@ async function tikwmFetch(url) {
   if (!json || json.code !== 0) throw new Error(json?.msg || "tikwm error");
   return json.data;
 }
-
-// ─── Cobalt API (Instagram & CapCut) ─────────────────────────────────────────
 
 async function cobaltFetch(url) {
   const apiUrl = process.env.COBALT_API_URL || process.env.API_URL || "https://api.cobalt.tools";
@@ -151,8 +132,6 @@ async function cobaltFetch(url) {
   return json;
 }
 
-// ─── Proxy thumbnail ──────────────────────────────────────────────────────────
-
 app.get("/api/proxy-thumbnail", async (req, res) => {
   const { url } = req.query;
   if (!url) return res.status(400).send("Missing url");
@@ -169,8 +148,6 @@ app.get("/api/proxy-thumbnail", async (req, res) => {
   }
 });
 
-// ─── /api/info ────────────────────────────────────────────────────────────────
-
 app.post("/api/info", async (req, res) => {
   const { url } = req.body;
   if (!url) return res.status(400).json({ error: "URL wajib diisi" });
@@ -178,7 +155,6 @@ app.post("/api/info", async (req, res) => {
   const platform = detectPlatform(url);
   if (!platform) return res.status(400).json({ error: "URL tidak valid. Gunakan link TikTok, Instagram Reel/Post." });
 
-  // ── TikTok: pakai tikwm (handle vm/vt + auto detect foto vs video) ──
   if (platform === "tiktok") {
     try {
       const data = await tikwmFetch(url);
@@ -198,12 +174,10 @@ app.post("/api/info", async (req, res) => {
       });
     } catch (e) {
       console.error("[info/tiktok] tikwm error:", e.message);
-      // Fallback yt-dlp hanya untuk video (bukan foto)
       const resolved = await resolveShortUrl(url);
       if (/\/photo\//.test(resolved)) {
         return res.status(500).json({ error: "Gagal mengambil info foto TikTok. Pastikan postingan publik." });
       }
-      // Lanjut ke yt-dlp di bawah dengan resolved URL
       return new Promise((resolve) => {
         exec(`yt-dlp --dump-json --no-playlist "${resolved}"`, { timeout: 30000 }, (err, stdout, stderr) => {
           if (err || !stdout.trim()) {
@@ -232,7 +206,6 @@ app.post("/api/info", async (req, res) => {
     }
   }
 
-  // ── Instagram & CapCut: pakai Cobalt ──
   if (platform === "instagram" || platform === "capcut") {
     try {
       const data = await cobaltFetch(url);
@@ -266,8 +239,6 @@ app.post("/api/info", async (req, res) => {
   return res.status(400).json({ error: "Platform tidak didukung." });
 });
 
-// ─── /api/download (MP4) ──────────────────────────────────────────────────────
-
 app.post("/api/download", async (req, res) => {
   const { url } = req.body;
   if (!url) return res.status(400).json({ error: "URL wajib diisi" });
@@ -275,14 +246,12 @@ app.post("/api/download", async (req, res) => {
   const platform = detectPlatform(url);
   if (!platform) return res.status(400).json({ error: "URL tidak valid." });
 
-  // ── TikTok: cek via tikwm dulu ──
   if (platform === "tiktok") {
     try {
       const data = await tikwmFetch(url);
       if ((data.images || []).length > 0) {
         return res.status(400).json({ error: "Ini postingan foto. Gunakan tombol Download Foto.", content_type: "carousel" });
       }
-      // Download langsung dari URL tikwm
       const videoUrl = data.hdplay || data.play;
       if (!videoUrl) throw new Error("No video URL from tikwm");
       const r = await fetchUrl(videoUrl, { headers: { "Referer": "https://www.tiktok.com/" } }, 60000);
@@ -295,7 +264,6 @@ app.post("/api/download", async (req, res) => {
       console.warn("[download/tiktok] tikwm failed, falling back to yt-dlp:", e.message);
     }
 
-    // Fallback yt-dlp
     const hasYtDlp = await checkYtDlp();
     if (!hasYtDlp) return res.status(500).json({ error: "yt-dlp tidak ditemukan." });
     const resolved = await resolveShortUrl(url);
@@ -307,7 +275,6 @@ app.post("/api/download", async (req, res) => {
     return;
   }
 
-  // ── Instagram & CapCut: pakai Cobalt ──
   if (platform === "instagram" || platform === "capcut") {
     try {
       const data = await cobaltFetch(url);
@@ -316,7 +283,6 @@ app.post("/api/download", async (req, res) => {
       }
       const videoUrl = data.url;
       if (!videoUrl) throw new Error("No URL from cobalt");
-      // Stream langsung dari cobalt ke client
       const r = await fetchUrl(videoUrl, {}, 60000);
       if (!r.ok) throw new Error(`cobalt stream ${r.status}`);
       res.setHeader("Content-Disposition", `attachment; filename="${platform}_nowatermark.mp4"`);
@@ -332,8 +298,6 @@ app.post("/api/download", async (req, res) => {
   return res.status(400).json({ error: "Platform tidak didukung." });
 });
 
-// ─── /api/download-mp3 ────────────────────────────────────────────────────────
-
 app.post("/api/download-mp3", async (req, res) => {
   const { url } = req.body;
   if (!url) return res.status(400).json({ error: "URL wajib diisi" });
@@ -341,7 +305,6 @@ app.post("/api/download-mp3", async (req, res) => {
   const platform = detectPlatform(url);
   if (!platform) return res.status(400).json({ error: "URL tidak valid." });
 
-  // ── TikTok: download video dulu via tikwm lalu convert ──
   if (platform === "tiktok") {
     try {
       const data = await tikwmFetch(url);
@@ -379,7 +342,6 @@ app.post("/api/download-mp3", async (req, res) => {
       console.warn("[mp3/tiktok] tikwm failed, falling back to yt-dlp:", e.message);
     }
 
-    // Fallback yt-dlp
     const hasYtDlp = await checkYtDlp();
     if (!hasYtDlp) return res.status(500).json({ error: "yt-dlp tidak ditemukan." });
     const resolved = await resolveShortUrl(url);
@@ -397,7 +359,6 @@ app.post("/api/download-mp3", async (req, res) => {
     return;
   }
 
-  // ── Instagram & CapCut: Cobalt download lalu ffmpeg ──
   if (platform === "instagram" || platform === "capcut") {
     try {
       const data = await cobaltFetch(url);
@@ -440,8 +401,6 @@ app.post("/api/download-mp3", async (req, res) => {
   return res.status(400).json({ error: "Platform tidak didukung." });
 });
 
-// ─── /api/download-images ─────────────────────────────────────────────────────
-
 app.post("/api/download-images", async (req, res) => {
   const { url } = req.body;
   if (!url) return res.status(400).json({ error: "URL wajib diisi" });
@@ -451,7 +410,6 @@ app.post("/api/download-images", async (req, res) => {
   if (!["tiktok", "instagram"].includes(platform))
     return res.status(400).json({ error: "Download gambar hanya support TikTok dan Instagram." });
 
-  // ── TikTok foto: tikwm ──
   if (platform === "tiktok") {
     try {
       const data = await tikwmFetch(url);
@@ -474,12 +432,10 @@ app.post("/api/download-images", async (req, res) => {
     }
   }
 
-  // ── Instagram: Cobalt picker ──
   if (platform === "instagram") {
     try {
       const data = await cobaltFetch(url);
 
-      // Single video/image
       if (data.status !== "picker") {
         const mediaUrl = data.url;
         if (!mediaUrl) throw new Error("No URL from cobalt");
@@ -494,7 +450,6 @@ app.post("/api/download-images", async (req, res) => {
         });
       }
 
-      // Carousel picker
       const items = data.picker || [];
       const images = await Promise.all(
         items.map(async (item, i) => {
@@ -514,8 +469,6 @@ app.post("/api/download-images", async (req, res) => {
     }
   }
 });
-
-// ─── Health ───────────────────────────────────────────────────────────────────
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", message: "Video Downloader API running (TikTok + Instagram + CapCut)" });
