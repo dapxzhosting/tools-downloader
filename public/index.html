@@ -36,13 +36,11 @@
     .subtitle { font-size: 14px; color: #777; line-height: 1.6; }
     .card { background: #fff; border: 0.5px solid #e0e0e0; border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; }
     .label { font-size: 12px; color: #888; margin-bottom: .75rem; font-weight: 500; }
-    /* Tabs */
     .tab-bar { background: #fff; border: 0.5px solid #e0e0e0; border-radius: 12px; padding: 6px; margin-bottom: 1rem; display: flex; gap: 4px; }
     .tab-btn { flex: 1; padding: 8px 6px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 5px; color: #888; background: transparent; transition: .15s; }
     .tab-btn.active { color: #fff; }
     .tab-btn:not(.active):hover { background: #f5f5f5; color: #444; }
     .tab-icon { font-size: 15px; }
-    /* Input */
     .input-row { display: flex; gap: 8px; flex-wrap: wrap; }
     .input-wrap { flex: 1; min-width: 0; position: relative; display: flex; align-items: center; }
     .clear-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #bbb; font-size: 16px; padding: 2px; line-height: 1; display: none; transition: color .15s; }
@@ -57,7 +55,6 @@
     .progress { height: 3px; background: #eee; border-radius: 4px; margin-top: .75rem; overflow: hidden; display: none; }
     .progress-fill { height: 100%; background: var(--accent, #ff2d55); border-radius: 4px; width: 0; transition: width .4s ease; }
     .error-box { background: #fff0f0; border: 0.5px solid #ffaaaa; border-radius: 8px; padding: .875rem 1rem; margin-bottom: 1rem; display: none; font-size: 13px; color: #cc0000; gap: 8px; align-items: center; }
-    /* Result */
     .result { display: none; }
     .video-row { display: flex; gap: 14px; align-items: flex-start; }
     .thumb-wrap { flex-shrink: 0; width: 90px; height: 120px; border-radius: 8px; overflow: hidden; background: #f0f0f0; display: flex; align-items: center; justify-content: center; }
@@ -67,7 +64,6 @@
     .platform-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; background: #f5f5f5; border: 0.5px solid #e0e0e0; border-radius: 5px; padding: 2px 7px; margin-bottom: .75rem; color: #666; }
     .stats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: .875rem; }
     .chip { font-size: 12px; color: #666; background: #f5f5f5; border: 0.5px solid #e5e5e5; border-radius: 6px; padding: 4px 8px; display: flex; align-items: center; gap: 4px; }
-    /* Download buttons */
     .dl-row { display: flex; gap: 8px; flex-wrap: wrap; }
     .btn-mp4 { flex: 1; min-width: 0; background: #00c2a0; color: #fff; padding: 10px 12px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 6px; transition: .15s; }
     .btn-mp4:hover { background: #00a889; }
@@ -75,17 +71,14 @@
     .btn-mp3 { flex: 1; min-width: 0; background: #7c4dff; color: #fff; padding: 10px 12px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 6px; transition: .15s; }
     .btn-mp3:hover { background: #6a3de8; }
     .btn-mp3:disabled { opacity: .5; cursor: not-allowed; }
-    /* Photo button */
     .btn-photo { width: 100%; background: #f59e0b; color: #fff; padding: 10px 12px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 6px; transition: .15s; margin-top: 8px; }
     .btn-photo:hover { background: #d97706; }
     .btn-photo:disabled { opacity: .5; cursor: not-allowed; }
-    /* Image download progress */
     .img-progress-wrap { margin-top: 10px; display: none; }
     .img-progress-label { font-size: 12px; color: #888; margin-bottom: 6px; }
     .img-progress-bg { height: 4px; background: #eee; border-radius: 4px; overflow: hidden; }
     .img-progress-fill { height: 100%; background: #f59e0b; border-radius: 4px; width: 0; transition: width .3s ease; }
     .hint { font-size: 11px; color: #aaa; margin-top: .5rem; }
-    /* Photo grid */
     .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
     .photo-grid-item { position: relative; border-radius: 8px; overflow: hidden; aspect-ratio: 1; background: #f0f0f0; cursor: pointer; }
     .photo-grid-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -99,7 +92,6 @@
       .photo-grid-item { background: #222 !important; }
       .photo-grid-dl-btn { background: rgba(255,255,255,.9) !important; }
     }
-    /* Steps */
     .steps-title { font-size: 13px; font-weight: 500; margin-bottom: 1rem; color: #888; }
     .step { display: flex; gap: 12px; margin-bottom: .875rem; align-items: flex-start; }
     .step:last-child { margin-bottom: 0; }
@@ -125,7 +117,6 @@
       <p class="subtitle">Download video & foto TikTok dan Instagram<br>tanpa watermark — MP4, MP3, atau Foto</p>
     </div>
 
-    <!-- Tabs -->
     <div class="tab-bar">
       <button class="tab-btn active" data-platform="tiktok" onclick="switchTab('tiktok')" style="background:#ff2d55;color:#fff;">
         <i class="tab-icon ti ti-brand-tiktok"></i> TikTok
@@ -135,7 +126,6 @@
       </button>
     </div>
 
-    <!-- Input -->
     <div class="card" id="inputCard" style="--accent:#ff2d55;">
       <div class="label" id="inputLabel">Paste URL atau teks share TikTok</div>
       <div class="input-row">
@@ -158,7 +148,6 @@
       <span id="errorMsg"></span>
     </div>
 
-    <!-- Result -->
     <div class="card result fade-in" id="resultCard">
       <div class="video-row">
         <div class="thumb-wrap">
@@ -170,7 +159,6 @@
           <div class="video-title" id="videoTitle"></div>
           <div class="stats" id="statsRow"></div>
 
-          <!-- Video/Audio buttons (hidden for photo-only posts) -->
           <div id="videoBtns">
             <div class="dl-row">
               <button class="btn-mp4" id="downloadBtn" onclick="downloadVideo('mp4')">
@@ -187,7 +175,6 @@
             <p class="hint" id="videoHint">MP4 = video tanpa watermark · MP3 = audio saja</p>
           </div>
 
-          <!-- Photo button (shown for photo/carousel posts) -->
           <div id="photoBtns" style="display:none;">
             <button class="btn-photo" id="downloadPhotoBtn" onclick="downloadAllImages()">
               <i class="ti ti-photo-down"></i>
@@ -203,7 +190,7 @@
           </div>
         </div>
       </div>
-      <!-- Photo grid (shown below for multi-photo posts) -->
+
       <div id="photoGridSection" style="display:none;margin-top:12px;">
         <div class="label" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">
           <span id="photoGridLabel">Preview Foto</span>
@@ -216,7 +203,6 @@
       </div>
     </div>
 
-    <!-- How to use -->
     <div class="card">
       <div class="steps-title">Cara pakai</div>
       <div class="step">
@@ -248,9 +234,9 @@
   <script>
     let currentUrl = '';
     let activePlatform = 'tiktok';
-    let currentContentType = 'video'; // 'video' | 'image' | 'carousel'
+    let currentContentType = 'video';
     let currentImageCount = 0;
-    let cachedImages = null; // prefetched image data array
+    let cachedImages = null;
 
     const platformConfig = {
       tiktok:    { accent: '#ff2d55', label: 'Paste URL atau teks share TikTok',    placeholder: 'https://tiktok.com/@user/video/...', icon: 'ti-brand-tiktok',    name: 'TikTok' },
@@ -336,13 +322,11 @@
 
         const cfg = platformConfig[activePlatform];
 
-        // Badge
         document.getElementById('platformBadge').innerHTML =
           `<i class="ti ${cfg.icon}" style="font-size:12px;"></i> ${cfg.name}`;
 
         document.getElementById('videoTitle').textContent = data.title || `${cfg.name} Post`;
 
-        // Thumbnail
         if (data.thumbnail) {
           const img = document.getElementById('thumbnail');
           img.src = data.thumbnail;
@@ -353,7 +337,6 @@
           document.getElementById('thumbPlaceholder').style.display = '';
         }
 
-        // Stats chips
         const stats = [];
         if (data.uploader) stats.push({ icon: 'ti-user', val: data.uploader });
         if (data.duration)  stats.push({ icon: 'ti-clock', val: formatDuration(data.duration) });
@@ -363,16 +346,13 @@
           .map(s => `<div class="chip"><i class="ti ${s.icon}" style="font-size:12px;"></i>${s.val}</div>`)
           .join('');
 
-        // Show correct buttons based on content type
         const isPhoto = currentContentType === 'image' || currentContentType === 'carousel';
         document.getElementById('videoBtns').style.display = isPhoto ? 'none' : 'block';
         document.getElementById('photoBtns').style.display = isPhoto ? 'block' : 'none';
 
         if (isPhoto) {
-          const count = currentImageCount > 1 ? `${currentImageCount} foto` : 'foto';
           document.getElementById('photoText').textContent = `Download Semua${currentImageCount > 1 ? ' (' + currentImageCount + ')' : ''}`;
 
-          // Show grid section and start prefetch
           document.getElementById('photoGridSection').style.display = 'block';
           document.getElementById('photoGrid').innerHTML = '';
           cachedImages = null;
@@ -610,7 +590,6 @@
       if (e.key === 'Enter') fetchInfo();
     });
 
-    // Init
     switchTab('tiktok');
   </script>
 </body>

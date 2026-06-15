@@ -206,23 +206,51 @@ app.post("/api/info", async (req, res) => {
     }
   }
 
+<<<<<<< HEAD
+=======
+  // ── Instagram & CapCut: pakai Cobalt + yt-dlp untuk metadata ──
+>>>>>>> 0dc5d37172bbf9a7d4d0eb139cb77b1db2b4c696
   if (platform === "instagram" || platform === "capcut") {
+    // Ambil metadata via yt-dlp (uploader, views, likes, duration, thumbnail, title)
+    async function fetchYtDlpMeta(targetUrl) {
+      const hasYtDlp = await checkYtDlp();
+      if (!hasYtDlp) return null;
+      return new Promise((resolve) => {
+        exec(`yt-dlp --dump-json --no-playlist "${targetUrl}"`, { timeout: 20000 }, (err, stdout) => {
+          if (err || !stdout.trim()) return resolve(null);
+          try {
+            const info = JSON.parse(stdout.trim().split("\n")[0]);
+            resolve(info);
+          } catch { resolve(null); }
+        });
+      });
+    }
+
     try {
-      const data = await cobaltFetch(url);
-      const isPicker = data.status === "picker";
-      const items = data.picker || [];
+      // Jalankan Cobalt dan yt-dlp secara paralel
+      const [cobaltData, ytMeta] = await Promise.all([
+        cobaltFetch(url),
+        fetchYtDlpMeta(url).catch(() => null),
+      ]);
+
+      const isPicker = cobaltData.status === "picker";
+      const items = cobaltData.picker || [];
+
+      // Prioritaskan thumbnail dari yt-dlp, fallback ke cobalt picker thumb
+      const thumbUrl = ytMeta?.thumbnail ||
+        (isPicker && items[0]?.thumb ? items[0].thumb : null);
 
       return res.json({
         platform,
-        title: `${platformLabel(platform)} Post`,
-        thumbnail: isPicker && items[0]?.thumb ? `/api/proxy-thumbnail?url=${encodeURIComponent(items[0].thumb)}` : null,
-        duration: null,
-        uploader: null,
-        view_count: null,
-        like_count: null,
+        title: ytMeta?.title || ytMeta?.description?.slice(0, 80) || `${platformLabel(platform)} Post`,
+        thumbnail: thumbUrl ? `/api/proxy-thumbnail?url=${encodeURIComponent(thumbUrl)}` : null,
+        duration: ytMeta?.duration || null,
+        uploader: ytMeta?.uploader || ytMeta?.channel || ytMeta?.uploader_id || null,
+        view_count: ytMeta?.view_count || null,
+        like_count: ytMeta?.like_count || null,
         content_type: isPicker ? "carousel" : "video",
         image_count: isPicker ? items.length : 0,
-        _cobalt_url: !isPicker ? (data.url || null) : null,
+        _cobalt_url: !isPicker ? (cobaltData.url || null) : null,
         _cobalt_picker: isPicker ? items : null,
       });
     } catch (e) {
